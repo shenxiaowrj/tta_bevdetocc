@@ -21,6 +21,7 @@
 # ===> vegetation - IoU = 39.59
 # ===> mIoU of 6019 samples: 36.01
 
+tta_image = True
 
 _base_ = ['../_base_/datasets/nus-3d.py', '../_base_/default_runtime.py']
 # Global
@@ -160,12 +161,13 @@ train_pipeline = [
 ]
 
 test_pipeline = [
-    dict(type='PrepareImageInputs', data_config=data_config, sequential=True),
+    dict(type='PrepareImageInputs', data_config=data_config, sequential=True, tta_image=tta_image),
     dict(
         type='LoadAnnotationsBEVDepth',
         bda_aug_conf=bda_aug_conf,
         classes=class_names,
-        is_train=False),
+        is_train=False,
+        tta_image=tta_image),
     dict(
         type='LoadPointsFromFile',
         coord_type='LIDAR',
@@ -245,5 +247,5 @@ custom_hooks = [
     ),
 ]
 
-load_from="bevdet-r50-4d-stereo-cbgs.pth"
+load_from="ckpt/bevdet-r50-4d-stereo-cbgs.pth"
 # fp16 = dict(loss_scale='dynamic')
