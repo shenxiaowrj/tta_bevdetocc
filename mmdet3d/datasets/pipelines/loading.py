@@ -1018,7 +1018,11 @@ class PrepareImageInputs(object):
         return (imgs, sensor2egos, ego2globals, intrins, post_rots, post_trans)
 
     def __call__(self, results):
-        results['img_inputs'] = self.get_inputs(results)
+        img_inputs = []
+        for flip in [True,False]:
+            for scale in [0.04,0.07]:
+                img_inputs.append(self.get_inputs(results, flip=flip, scale=scale))
+        results['img_inputs_all'] = img_inputs
         return results
 
 
@@ -1081,28 +1085,31 @@ class LoadAnnotationsBEVDepth(object):
         gt_boxes, gt_labels = torch.Tensor(gt_boxes), torch.tensor(gt_labels)
         rotate_bda, scale_bda, flip_dx, flip_dy = self.sample_bda_augmentation(
         )
-        bda_mat = torch.zeros(4, 4)
-        bda_mat[3, 3] = 1
-        gt_boxes, bda_rot = self.bev_transform(gt_boxes, rotate_bda, scale_bda,
-                                               flip_dx, flip_dy)
-        bda_mat[:3, :3] = bda_rot
-        if len(gt_boxes) == 0:
-            gt_boxes = torch.zeros(0, 9)
-        results['gt_bboxes_3d'] = \
-            LiDARInstance3DBoxes(gt_boxes, box_dim=gt_boxes.shape[-1],
-                                 origin=(0.5, 0.5, 0.5))
-        results['gt_labels_3d'] = gt_labels
-        imgs, rots, trans, intrins = results['img_inputs'][:4]
-        post_rots, post_trans = results['img_inputs'][4:]
-        results['img_inputs'] = (imgs, rots, trans, intrins, post_rots,
-                                 post_trans, bda_rot)
-        if 'voxel_semantics' in results:
-            if flip_dx:
-                results['voxel_semantics'] = results['voxel_semantics'][::-1,...].copy()
-                results['mask_lidar'] = results['mask_lidar'][::-1,...].copy()
-                results['mask_camera'] = results['mask_camera'][::-1,...].copy()
-            if flip_dy:
-                results['voxel_semantics'] = results['voxel_semantics'][:,::-1,...].copy()
-                results['mask_lidar'] = results['mask_lidar'][:,::-1,...].copy()
-                results['mask_camera'] = results['mask_camera'][:,::-1,...].copy()
+        results['img_inputs'] = []
+        for i, img_inputs in enumerate(results['img_inputs_all']):
+            bda_mat = torch.zeros(4, 4)
+            bda_mat[3, 3] = 1
+            gt_boxes, bda_rot = self.bev_transform(gt_boxes, rotate_bda, scale_bda,
+                                                   flip_dx, flip_dy)
+            bda_mat[:3, :3] = bda_rot
+            if len(gt_boxes) == 0:
+                gt_boxes = torch.zeros(0, 9)
+            results['gt_bboxes_3d'] = \
+                LiDARInstance3DBoxes(gt_boxes, box_dim=gt_boxes.shape[-1],
+                                     origin=(0.5, 0.5, 0.5))
+            results['gt_labels_3d'] = gt_labels
+            imgs, rots, trans, intrins = img_inputs[:4]
+            post_rots, post_trans = img_inputs[4:]
+            results['img_inputs'].append((imgs, rots, trans, intrins, post_rots,
+                                          post_trans, bda_rot), )
+            if 'voxel_semantics' in results:
+                if flip_dx:
+                    results['voxel_semantics'] = results['voxel_semantics'][::-1, ...].copy()
+                    results['mask_lidar'] = results['mask_lidar'][::-1, ...].copy()
+                    results['mask_camera'] = results['mask_camera'][::-1, ...].copy()
+                if flip_dy:
+                    results['voxel_semantics'] = results['voxel_semantics'][:, ::-1, ...].copy()
+                    results['mask_lidar'] = results['mask_lidar'][:, ::-1, ...].copy()
+                    results['mask_camera'] = results['mask_camera'][:, ::-1, ...].copy()
+            img_inputs = 0
         return results

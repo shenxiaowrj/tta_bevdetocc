@@ -81,6 +81,21 @@ class BEVStereo4DOCC(BEVStereo4D):
         occ_res = occ_res.squeeze(dim=0).cpu().numpy().astype(np.uint8)
         return [occ_res]
 
+    def aug_test(self, points, img_metas, img=None, rescale=False, **kwargs):
+        """Test function without augmentaiton."""
+        all_img_feats = []
+        for single_img in img:
+            single_img_feats, _, _ = self.extract_feat(
+                points, img=single_img, img_metas=img_metas, **kwargs)
+            all_img_feats.append(single_img_feats[0])
+        averaged_features = torch.mean(torch.cat([x for x in all_img_feats], dim=0), dim=0)
+        occ_pred = self.final_conv(averaged_features.unsqueeze(0)).permute(0, 4, 3, 2, 1)
+        if self.use_predicter:
+            occ_pred = self.predicter(occ_pred)
+        occ_score = occ_pred.softmax(-1)
+        occ_res = occ_score.argmax(-1)
+        occ_res = occ_res.squeeze(dim=0).cpu().numpy().astype(np.uint8)
+        return [occ_res]
     def forward_train(self,
                       points=None,
                       img_metas=None,
