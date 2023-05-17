@@ -1019,9 +1019,9 @@ class PrepareImageInputs(object):
 
     def __call__(self, results):
         img_inputs = []
+        scale = None
         for flip in [True,False]:
-            for scale in [0.04,0.07]:
-                img_inputs.append(self.get_inputs(results, flip=flip, scale=scale))
+            img_inputs.append(self.get_inputs(results, flip=flip, scale=scale))
         results['img_inputs_all'] = img_inputs
         return results
 
