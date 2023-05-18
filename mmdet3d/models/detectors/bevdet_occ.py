@@ -59,16 +59,15 @@ class BEVStereo4DOCC(BEVStereo4D):
             num_total_samples=mask_camera.sum()
             loss_occ=self.loss_occ(preds,voxel_semantics,mask_camera, avg_factor=num_total_samples)
             loss_['loss_occ'] = loss_occ
+            loss_geo_scal = geo_scal_loss(preds, voxel_semantics.long(),mask_camera)
+            loss_['loss_geo_scal'] = loss_geo_scal
+            loss_sem_scal = sem_scal_loss(preds, voxel_semantics.long(),mask_camera)
+            loss_['loss_sem_scal'] = loss_sem_scal
         else:
             voxel_semantics = voxel_semantics.reshape(-1)
             preds = preds.reshape(-1, self.num_classes)
             loss_occ = self.loss_occ(preds, voxel_semantics,)
             loss_['loss_occ'] = loss_occ
-
-        loss_geo_scal = geo_scal_loss(preds,voxel_semantics.long())
-        loss_['loss_geo_scal'] = loss_geo_scal
-        loss_sem_scal = sem_scal_loss(preds, voxel_semantics.long())
-        loss_['loss_sem_scal'] = loss_sem_scal
 
         return loss_
 
