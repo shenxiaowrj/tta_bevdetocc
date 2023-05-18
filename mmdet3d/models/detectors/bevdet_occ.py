@@ -7,6 +7,9 @@ from mmdet.models.builder import build_loss
 from mmcv.cnn.bricks.conv_module import ConvModule
 from torch import nn
 import numpy as np
+import torch.nn.functional as F
+from mmdet3d.models.losses.loss_utils import geo_scal_loss
+from mmdet3d.models.losses.loss_utils import sem_scal_loss
 
 
 @DETECTORS.register_module()
@@ -61,6 +64,12 @@ class BEVStereo4DOCC(BEVStereo4D):
             preds = preds.reshape(-1, self.num_classes)
             loss_occ = self.loss_occ(preds, voxel_semantics,)
             loss_['loss_occ'] = loss_occ
+
+        loss_geo_scal = geo_scal_loss(preds,voxel_semantics.long())
+        loss_['loss_geo_scal'] = loss_geo_scal
+        loss_sem_scal = sem_scal_loss(preds, voxel_semantics.long())
+        loss_['loss_sem_scal'] = loss_sem_scal
+
         return loss_
 
     def simple_test(self,
