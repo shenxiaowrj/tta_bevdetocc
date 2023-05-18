@@ -20,14 +20,14 @@ def geo_scal_loss(pred, ssc_target, semantic=True):
         pred = F.softmax(pred, dim=1)
 
         # Compute empty and nonempty probabilities
-        empty_probs = pred[:, 0, :, :, :]
+        empty_probs = pred[:, 17]
     else:
         empty_probs = 1 - torch.sigmoid(pred)
     nonempty_probs = 1 - empty_probs
 
     # Remove unknown voxels
-    mask = ssc_target != 255
-    nonempty_target = ssc_target != 0
+    mask = ssc_target != 0
+    nonempty_target = ssc_target != 17
     nonempty_target = nonempty_target[mask].float()
     nonempty_probs = nonempty_probs[mask]
     empty_probs = empty_probs[mask]
