@@ -48,12 +48,12 @@ def sem_scal_loss(pred, ssc_target):
     pred = F.softmax(pred, dim=1)
     loss = 0
     count = 0
-    mask = ssc_target != 255
+    mask = ssc_target != 0
     n_classes = pred.shape[1]
     for i in range(0, n_classes):
 
         # Get probability of class i
-        p = pred[:, i, :, :, :]
+        p = pred[:, i,]
 
         # Remove unknown voxels
         target_ori = ssc_target
