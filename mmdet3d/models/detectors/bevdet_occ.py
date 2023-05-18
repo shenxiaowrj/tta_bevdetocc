@@ -81,21 +81,6 @@ class BEVStereo4DOCC(BEVStereo4D):
         occ_res = occ_res.squeeze(dim=0).cpu().numpy().astype(np.uint8)
         return [occ_res]
 
-    def aug_test(self, points, img_metas, img=None, rescale=False, **kwargs):
-        """Test function without augmentaiton."""
-        all_occ_score = []
-        for single_img in img:
-            single_img_feats, _, _ = self.extract_feat(
-                points, img=single_img, img_metas=img_metas, **kwargs)
-            occ_pred = self.final_conv(single_img_feats[0]).permute(0, 4, 3, 2, 1)
-            if self.use_predicter:
-                occ_pred = self.predicter(occ_pred)
-            occ_score = occ_pred.softmax(-1)
-            all_occ_score.append(occ_score)
-        average_score = sum(all_occ_score) / len(img)
-        occ_res = average_score.argmax(-1)
-        occ_res = occ_res.squeeze(dim=0).cpu().numpy().astype(np.uint8)
-        return [occ_res]
     def forward_train(self,
                       points=None,
                       img_metas=None,
