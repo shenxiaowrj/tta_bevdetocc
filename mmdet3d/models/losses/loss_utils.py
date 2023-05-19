@@ -25,9 +25,7 @@ def geo_scal_loss(pred, ssc_target, mask_camera, semantic=True):
         empty_probs = 1 - torch.sigmoid(pred)
     nonempty_probs = 1 - empty_probs
 
-    # Remove unknown voxels
-    mask = ssc_target != 0
-    mask = mask & mask_camera
+    mask = mask_camera
     mask = mask.to(torch.bool)
 
     nonempty_target = ssc_target != 17
@@ -51,8 +49,7 @@ def sem_scal_loss(pred, ssc_target,mask_camera):
     pred = F.softmax(pred, dim=1)
     loss = 0
     count = 0
-    mask = ssc_target != 0
-    mask = mask & mask_camera
+    mask = mask_camera
     mask = mask.to(torch.bool)
     n_classes = pred.shape[1]
     for i in range(0, n_classes):
